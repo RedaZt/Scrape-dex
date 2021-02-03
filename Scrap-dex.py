@@ -14,15 +14,16 @@ def zipping(manga_title, chapter_folder) :
             targetfile.write(file)
     os.chdir("C:/Users/moroc/Documents/Projects/Python/downloads/"+manga_title)
 
+    
 def status_bar(total,current):
     width_of_bar = 50
     x = int((current / total)  * width_of_bar)
     printed_string = "".join([('█' if i < x else ' ') for i in range(width_of_bar)])
-
     out = "status : [" + printed_string + "] " + str(int((current / total) * 100)) + "%\r"
     sys.stdout.write(out)
     sys.stdout.flush()
 
+    
 def downloader(manga_id):
     #getting manga info
     link = "https://mangadex.org/api/manga/"+manga_id
@@ -73,8 +74,6 @@ def downloader(manga_id):
 
     #downloading
     for x in chapters_to_download :
-
-
         #getting chapter's infos
         chapters_title = chapters_ids[x]["title"].translate(str.maketrans(dictio))
         chapters_number = chapters_ids[x]["chapter"]
@@ -112,7 +111,7 @@ def downloader(manga_id):
             status_bar(total,downloaded)
             sleep(1)
         print("\ndownloaded",manga_title,"Chapter",chapters_ids[x]["chapter"])
-
+        
         zipping(manga_title, chapters_folder)
 
 

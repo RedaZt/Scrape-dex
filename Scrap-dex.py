@@ -125,27 +125,35 @@ def titleDownloader(id) :
         chapterDownloader(id)
 
 
-def mangaSearch(title) :
-    # prepare the title
-    title = '%'.join(title.split())
-    link = f"https://api.mangadex.org/manga?title={title}"
+def mangaSearch() :
+    manga_index = 0
+    while manga_index == 0 :
+        # prepare the title
+        title = input("Search : ")
+        title = '%'.join(title.split())
+        link = f"https://api.mangadex.org/manga?title={title}&limit=20"
 
-    # getting search results
-    res = http.request('GET', link)
-    data = json.loads(res.data.decode('utf8'))
-    
-    results = {}
-    for x in data["results"] : 
-        results[x["data"]["attributes"]["title"]["en"]] = x["data"]["id"]
+        # getting search results
+        res = http.request('GET', link)
+        data = json.loads(res.data.decode('utf8'))
+        
+        results = {}
+        for x in data["results"] : 
+            results[x["data"]["attributes"]["title"]["en"]] = x["data"]["id"]
 
-    # printing results
-    results_keys = list(results.keys())
-    for i,x in enumerate(results_keys) :
-        print(f"{i+1}. {x}")
+        # printing results
+        if results != {} :
+            results_keys = list(results.keys())
+            for i,x in enumerate(results_keys) :
+                print(f"{i+1}. {x}")
+            manga_index = int(input("Enter the number of the manga you want to download : "))
+            titleDownloader(results[results_keys[manga_index-1]])
+
+        else :
+            print("could not found any using the given search keywords(s)")
+            manga_index = 0
     
-    manga_index = int(input("Enter the number of the manga you want to download : "))
     
-    titleDownloader(results[results_keys[manga_index-1]])
 
 
 if __name__ == "__main__" :
@@ -160,5 +168,4 @@ if __name__ == "__main__" :
     # chapter example :
     # https://api.mangadex.org/chapter/8425f08f-dbcc-43b1-bb2e-a7a4d0842108
 
-    title = input()
-    mangaSearch(title)
+    mangaSearch()

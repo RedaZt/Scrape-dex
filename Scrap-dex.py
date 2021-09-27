@@ -18,6 +18,12 @@ def statusBar(total,current):
     out = "status : [" + printed_string + "] " + str(int((current / total) * 100)) + "%\r"
     print(f"{out}\r",end=end)
 
+def requestPage(link):
+    return urllib3.PoolManager().request("GET", link)
+    
+def getJson(response):
+    return  json.loads(response.data.decode('utf8'))
+
 def chapterDownloader(id):
     link = f"https://api.mangadex.org/chapter/{id}"
     res = http.request('GET', link)
@@ -29,14 +35,17 @@ def chapterDownloader(id):
     chapter = data["data"]["attributes"]["chapter"]
     groups = []
 
-    for y in data["relationships"]:
+    # pprint.pprint(data)
+    # exit()
+
+    for y in data["data"]["relationships"]:
         if y["type"] == "scanlation_group" :
             group_id = y["id"]
             group_link = f"https://api.mangadex.org/group/{group_id}"
             res4 = http.request('GET', group_link)
             group_data = json.loads(res4.data.decode('utf8'))
             groups.append(group_data["data"]["attributes"]["name"])
-    for y in data["relationships"]:
+    for y in data["data"]["relationships"]:
         if y["type"] == "manga" :
             manga_id = y["id"]
             manga_link = f"https://api.mangadex.org/manga/{manga_id}"
@@ -77,18 +86,19 @@ def titleDownloader(id) :
     manga_title = data["data"]["attributes"]["title"]["en"].translate(str.maketrans(dictionary))
 
     # getting available chapters
-    feed_link = link = f"https://api.mangadex.org/manga/{id}/feed"
+    feed_link = link = f"https://api.mangadex.org/manga/{id}/feed?['en']&limit=500"
     res2 = http.request('GET', feed_link)
     data = json.loads(res2.data.decode('utf8'))
-    chapters = data["results"]
+    # pprint.pprint(data)
+    # exit()
+    chapters = data["data"]
 
     available_chapters = []
     for x in chapters :
-        if x["data"]["attributes"]["translatedLanguage"] == "en" : 
-            available_chapters.append(x["data"]["attributes"]["chapter"])
+        available_chapters.append(x["attributes"]["chapter"])
     print(f"Manga : {manga_title}")
     print("Available Chapter : ")
-    print(sorted(map(int,available_chapters)))
+    print(sorted(map(float,available_chapters)))
 
 
     requested_chapters = input("Chapters you want to download : ")
@@ -113,13 +123,11 @@ def titleDownloader(id) :
     if '0' in requested_chapters :
         requested_chapters[requested_chapters.index('0')] = ''
 
-
-    # pprint.pprint(chapters)
     chapters_to_download = []
-    for x in requested_chapters:
+    for x in sorted(requested_chapters):
         for chapter in chapters:
-            if chapter["data"]["attributes"]["translatedLanguage"] == "en" and  chapter["data"]["attributes"]["chapter"] == x:
-                chapters_to_download.append(chapter["data"]["id"])
+            if chapter["attributes"]["translatedLanguage"] == "en" and  chapter["attributes"]["chapter"] == x:
+                chapters_to_download.append(chapter["id"])
     
     for id in chapters_to_download :
         chapterDownloader(id)
@@ -138,8 +146,11 @@ def mangaSearch() :
         data = json.loads(res.data.decode('utf8'))
         
         results = {}
-        for x in data["results"] : 
-            results[x["data"]["attributes"]["title"]["en"]] = x["data"]["id"]
+        for x in data["data"] : 
+            try :
+                results[x["attributes"]["title"]["en"]] = x["id"]
+            except :
+                results[x["attributes"]["title"]["ja"]] = x["id"]
 
         # printing results
         if results != {} :
@@ -150,15 +161,13 @@ def mangaSearch() :
             titleDownloader(results[results_keys[manga_index-1]])
 
         else :
-            print("could not found any using the given search keywords(s)")
+            print("could not found any serie using the given search keywords(s)")
             manga_index = 0
     
     
 
 
 if __name__ == "__main__" :
-
-    # id="85a99758-de39-471e-9f6d-800547f53d0a"
     # link = f"https://api.mangadex.org/manga/{id}"
     # link = f"https://api.mangadex.org/chapter/{id}"
     # link = "https://api.mangadex.org/at-home/server/{id}"

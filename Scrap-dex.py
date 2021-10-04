@@ -30,7 +30,10 @@ def chapterDownloader(id):
     data = json.loads(res.data.decode('utf8'))
 
     pages = data["data"]["attributes"]["data"]
-    title = data["data"]["attributes"]["title"].translate(str.maketrans(dictionary))
+    try : 
+        title = data["data"]["attributes"]["title"].translate(str.maketrans(dictionary))
+    except :
+        title = ''
     hash = data["data"]["attributes"]["hash"]
     chapter = data["data"]["attributes"]["chapter"]
     groups = []
@@ -86,7 +89,7 @@ def titleDownloader(id) :
     manga_title = data["data"]["attributes"]["title"]["en"].translate(str.maketrans(dictionary))
 
     # getting available chapters
-    feed_link = link = f"https://api.mangadex.org/manga/{id}/feed?['en']&limit=500"
+    feed_link = link = f"https://api.mangadex.org/manga/{id}/feed?limit=500&translatedLanguage[]=en"
     res2 = http.request('GET', feed_link)
     data = json.loads(res2.data.decode('utf8'))
     # pprint.pprint(data)
@@ -100,37 +103,31 @@ def titleDownloader(id) :
     print("Available Chapter : ")
     print(sorted(map(float,available_chapters)))
 
-
-    requested_chapters = input("Chapters you want to download : ")
+    requested_chapters = ''
     while requested_chapters == '' :
         requested_chapters = input("Chapters you want to download : ")
-    if requested_chapters == '*':
-        requested_chapters = available_chapters
-    elif '-' in requested_chapters:
-        requested_chapters = requested_chapters.split('-')
-        l = []
-        for x in available_chapters:
-            if float(requested_chapters[0]) <= float(x) and float(x) <= float(requested_chapters[1]) :
-                l.append(x)
-        requested_chapters = l
-    else :
-        requested_chapters = requested_chapters.replace(' ','')
-        requested_chapters = requested_chapters.split(',')
-        for x in requested_chapters:
-            if x not in available_chapters :
-                del(requested_chapters[requested_chapters.index(x)])
-    
-    if '0' in requested_chapters :
-        requested_chapters[requested_chapters.index('0')] = ''
 
+    requested_chapters = [s.strip() for s in requested_chapters.split(',')]
     chapters_to_download = []
-    for x in sorted(requested_chapters):
-        for chapter in chapters:
-            if chapter["attributes"]["translatedLanguage"] == "en" and  chapter["attributes"]["chapter"] == x:
-                chapters_to_download.append(chapter["id"])
     
-    for id in chapters_to_download :
-        chapterDownloader(id)
+    for x in requested_chapters:
+        if '-' in x:
+            lower_bound = x.split('-')[0]
+            upper_bound = x.split('-')[1]
+            
+            l = []
+            for x in available_chapters:
+                if float(lower_bound) <= float(x) and float(x) <= float(upper_bound) :
+                    l.append(float(x))
+            chapters_to_download += l
+        
+        else :
+            chapters_to_download.append(float(x))
+
+    for x in sorted(chapters_to_download):
+        for chapter in chapters:
+            if float(chapter["attributes"]["chapter"]) == x:
+                chapterDownloader(chapter["id"])
 
 
 def mangaSearch() :
@@ -168,13 +165,4 @@ def mangaSearch() :
 
 
 if __name__ == "__main__" :
-    # link = f"https://api.mangadex.org/manga/{id}"
-    # link = f"https://api.mangadex.org/chapter/{id}"
-    # link = "https://api.mangadex.org/at-home/server/{id}"
-    # link = "https://api.mangadex.org/manga?title="
-    # https://{md@h server node}/data/{data.attributes.hash}/{data.attributes.data}
-
-    # chapter example :
-    # https://api.mangadex.org/chapter/8425f08f-dbcc-43b1-bb2e-a7a4d0842108
-
     mangaSearch()

@@ -12,6 +12,7 @@ Search and download based script, written using MangaDex API v5.
 
 ### Example usage
 ```
+Search : ranger reject
 1. Ranger Reject
 Enter the number of the manga you want to download : 1
 Manga : Ranger Reject

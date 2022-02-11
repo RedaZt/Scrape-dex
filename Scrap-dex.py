@@ -8,6 +8,7 @@ def zipping(directory) :
     with zipfile.ZipFile(directory+'.cbz', 'w') as targetfile :
         for img in imgs :
             targetfile.write(directory+'/'+img, img)
+    shutil.rmtree(directory)
 
 def statusBar(total,current):
     end = ''
@@ -29,17 +30,20 @@ def chapterDownloader(id):
     res = http.request('GET', link)
     data = json.loads(res.data.decode('utf8'))
 
-    pages = data["data"]["attributes"]["data"]
+    pagesLink = f"https://api.mangadex.org/at-home/server/{id}"
+    res2 = http.request('GET', pagesLink)
+    pagesData = json.loads(res2.data.decode('utf8'))
+
+    baseUrl = pagesData["baseUrl"]
+    pages = pagesData["chapter"]["data"]
+    hash = pagesData["chapter"]["hash"]
+    chapter = data["data"]["attributes"]["chapter"]
     try : 
         title = data["data"]["attributes"]["title"].translate(str.maketrans(dictionary))
     except :
         title = ''
-    hash = data["data"]["attributes"]["hash"]
-    chapter = data["data"]["attributes"]["chapter"]
-    groups = []
 
-    # pprint.pprint(data)
-    # exit()
+    groups = []
 
     for y in data["data"]["relationships"]:
         if y["type"] == "scanlation_group" :
@@ -56,7 +60,7 @@ def chapterDownloader(id):
             manga_data = json.loads(res4.data.decode('utf8'))
             manga_title = manga_data["data"]["attributes"]["title"]["en"].translate(str.maketrans(dictionary))
 
-    groups = ' & '.join(groups)
+    groups = ' & '.join(groups).translate(str.maketrans(dictionary))
 
     directory = f"Manga/{manga_title}/{manga_title} Ch. {chapter} - {title} (en) [{groups}]"
     if not os.path.exists(directory):
@@ -65,17 +69,15 @@ def chapterDownloader(id):
     print(f"downloading : {manga_title} Chapter {chapter}")
 
     for i,page in enumerate(pages) : 
-        request_link = f"https://api.mangadex.org/at-home/server/{id}"
-        res3 = http.request('GET', request_link)
-        server = json.loads(res3.data.decode('utf8'))["baseUrl"]
-        base_link = f"{server}/data/{hash}/{page}"
+        imageUrl = f"{baseUrl}/data/{hash}/{page}"
         ext = page.split('.')[-1]
+
         with open(f"{directory}/page {str(i).zfill(3)}.{ext}", 'wb+') as img :                
-            dt = http.request('GET', base_link)
+            dt = http.request('GET', imageUrl)
             img.write(dt.data)
+
         statusBar(len(pages),i+1)
     zipping(directory)
-    shutil.rmtree(directory)
 
     print(f"downloaded : {manga_title} Chapter {chapter}")
 
@@ -92,16 +94,15 @@ def titleDownloader(id) :
     feed_link = link = f"https://api.mangadex.org/manga/{id}/feed?limit=500&translatedLanguage[]=en"
     res2 = http.request('GET', feed_link)
     data = json.loads(res2.data.decode('utf8'))
-    # pprint.pprint(data)
-    # exit()
     chapters = data["data"]
 
     available_chapters = []
     for x in chapters :
-        available_chapters.append(x["attributes"]["chapter"])
+        available_chapters.append(float(x["attributes"]["chapter"]))
+    available_chapters = sorted([int(x) if x == int(x) else float(x) for x in available_chapters])
     print(f"Manga : {manga_title}")
     print("Available Chapter : ")
-    print(sorted(map(float,available_chapters)))
+    print(available_chapters)
 
     requested_chapters = ''
     while requested_chapters == '' :
@@ -120,7 +121,7 @@ def titleDownloader(id) :
                 if float(lower_bound) <= float(x) and float(x) <= float(upper_bound) :
                     l.append(float(x))
             chapters_to_download += l
-        
+
         else :
             chapters_to_download.append(float(x))
 
@@ -128,7 +129,6 @@ def titleDownloader(id) :
         for chapter in chapters:
             if float(chapter["attributes"]["chapter"]) == x:
                 chapterDownloader(chapter["id"])
-
 
 def mangaSearch() :
     manga_index = 0
@@ -165,4 +165,5 @@ def mangaSearch() :
 
 
 if __name__ == "__main__" :
+
     mangaSearch()

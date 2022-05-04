@@ -2,9 +2,9 @@ import os, shutil, zipfile
 
 def writeFolderToCBZ(directory):
     images = os.listdir(directory)
-    with zipfile.ZipFile(directory+'.cbz', 'w') as targetfile :
+    with zipfile.ZipFile(directory + '.cbz', 'w') as targetfile :
         for image in images :
-            targetfile.write(directory+'/'+image, image)
+            targetfile.write(directory + '/' + image, image)
     shutil.rmtree(directory)
 
 def statusBar(total, current):

@@ -117,10 +117,6 @@ class MangadexChapter:
 
         print(f"downloaded : {self.mangaTitle} Chapter {self.chapter}")
 
-# https://mangadex.org/title/53f25044-1d36-4966-89bc-4e1d259778f2/neko-ga-nishi-mukya
-# https://mangadex.org/title/1003024d-101c-4fb6-86e6-033167bab723/amai-seikatsu
-# https://mangadex.org/title/0149daa5-89c9-4e05-bf4f-f2440e0d2db7/kimi-no-koe
-
 def main():
     Manga = MangadexTitle(input())
 

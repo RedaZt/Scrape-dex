@@ -1,4 +1,4 @@
-import os, re, requests, pprint
+import os, re
 from requests import Session
 from typing import List
 from utils import writeFolderToCBZ, statusBar

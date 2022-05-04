@@ -4,6 +4,7 @@ Search and download based script, written using MangaDex API v5.
 
 ## Requirements
   * [Python 3.4+](https://www.python.org/downloads/)
+  * requests
 
 ## Usage
 * Download the Scrap-dex.py

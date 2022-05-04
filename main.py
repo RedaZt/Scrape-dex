@@ -28,7 +28,7 @@ class MangadexTitle:
 
     def getChapters(self) -> List:
         chaptersApiLink = "https://api.mangadex.org/manga/{id}/feed?limit=500&translatedLanguage[]=en"
-        res = self.session.get(chaptersApiLink.format(id=self.id)).json()
+        res = self.session.get(chaptersApiLink.format(id = self.id)).json()
         data = res["data"]
         availableChapters = {}
         for element in data :
@@ -70,7 +70,6 @@ class MangadexChapter:
     
     def getGroups(self):
         groups = []
-
         for y in self.infos["data"]["relationships"]:
             if y["type"] == "scanlation_group" :
                 groupId = y["id"]
@@ -79,7 +78,6 @@ class MangadexChapter:
                 groups.append(groupData["data"]["attributes"]["name"])
 
         groups = ' & '.join(groups).translate(str.maketrans(dictionary))
-
         return groups
     
     def getPath(self):

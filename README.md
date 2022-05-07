@@ -7,9 +7,8 @@ Search and download based script, written using MangaDex API v5.
   * requests
 
 ## Usage
-* Download the Scrap-dex.py
-* Navigate to where the file is located
-* Run the script
+* Download the Source code.
+* Run the "main.py" file.
 
 ### Example usage
 ```

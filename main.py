@@ -3,7 +3,7 @@ from requests import Session
 from typing import List
 from utils import writeFolderToCBZ, statusBar
 
-dictionary = {"+" : "", "!" : "", "?" : "", "%" : "", "*" : "", "/" : "", "#" : "", "\\": "", "&" : "and", ":" : "-",  '"' : ""}
+specialCharacters = {'?' : '', '"' : '', '*' : '', '/' : '', '#' : '', '\\': '', ':' : '', '_' : ' ', '|' : '', '<' : '', '>' : ''}
 
 class MangadexTitle:
     def __init__(self, link : str):
@@ -23,7 +23,7 @@ class MangadexTitle:
             title = data["en"]
         except : 
             title = data[list(data)[-1]]
-        return title.translate(str.maketrans(dictionary))
+        return title.translate(str.maketrans(specialCharacters))
         
 
     def getChapters(self) -> List:
@@ -37,9 +37,15 @@ class MangadexTitle:
             else:
                 chapter = float(element["attributes"]["chapter"])
                 if int(chapter) == chapter :
-                    availableChapters[int(chapter)] = element["id"]
+                    if int(chapter) in availableChapters:
+                        availableChapters[int(chapter)] += [element["id"]]
+                    else:
+                        availableChapters[int(chapter)] = [element["id"]]
                 else:
-                    availableChapters[chapter] = element["id"]
+                    if chapter in availableChapters:
+                        availableChapters[chapter] += [element["id"]]
+                    else:
+                        availableChapters[chapter] = [element["id"]]
         return availableChapters
 
 class MangadexChapter:
@@ -60,7 +66,7 @@ class MangadexChapter:
     def getTitle(self) -> str:
         title = ''
         try : 
-            title = self.infos["data"]["attributes"]["title"].translate(str.maketrans(dictionary))
+            title = self.infos["data"]["attributes"]["title"].translate(str.maketrans(specialCharacters))
         except :
             title = ''
         return title
@@ -77,7 +83,7 @@ class MangadexChapter:
                 groupData = self.session.get(groupLink).json()
                 groups.append(groupData["data"]["attributes"]["name"])
 
-        groups = ' & '.join(groups).translate(str.maketrans(dictionary))
+        groups = ' & '.join(groups).translate(str.maketrans(specialCharacters))
         return groups
     
     def getPath(self):
@@ -145,10 +151,9 @@ def main():
                     chapter = int(requested) if int(requested) == float(requested) else float(requested)
                     chaptersToBeDownloaded[chapter] = Manga.chapters[chapter]
     
-    for chapter in sorted(chaptersToBeDownloaded):
-        chapter = MangadexChapter(Manga.title, chaptersToBeDownloaded[chapter])
-        chapter.download()
-
+    for requested in sorted(chaptersToBeDownloaded):
+        for chapter in chaptersToBeDownloaded[requested]:
+            MangadexChapter(Manga.title, chapter).download()
 
 if __name__ == '__main__':
     main()

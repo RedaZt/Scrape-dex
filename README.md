@@ -7,8 +7,8 @@ Search and download based script, written using MangaDex API v5.
   * requests
 
 ## Usage
-* Download the Source code.
-* Run the "main.py" file.
+  * Download the source code.
+  * Run the "main.py" file.
 
 ### Example usage
 ```
@@ -27,3 +27,6 @@ Downloaded : Ranger Reject Chapter 1
 
 ... (and so on)
 ```
+
+### Current limitations
+  * The script will download all available releases of each chapter specified.

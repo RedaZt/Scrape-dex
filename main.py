@@ -119,10 +119,8 @@ class MangadexChapter:
 
         writeFolderToCBZ(self.path)
 
-        print(f"downloaded : {self.mangaTitle} Chapter {self.chapter}")
-
 def main():
-    Manga = MangadexTitle(input())
+    Manga = MangadexTitle(input("Paste series link here : "))
 
     print(f"Manga : {Manga.title}")
     print(f"Available Chapters :\n{sorted(Manga.chapters)}")
@@ -154,6 +152,8 @@ def main():
     for requested in sorted(chaptersToBeDownloaded):
         for chapter in chaptersToBeDownloaded[requested]:
             MangadexChapter(Manga.title, chapter).download()
+    
+    print("ALL DONE !!")
 
 if __name__ == '__main__':
     main()

@@ -132,7 +132,7 @@ class MangadexChapter:
         if not os.path.exists(path):
             os.makedirs(path)
 
-        print(f"downloading : {self.mangaTitle} Chapter {self.chapter}")
+        print(f"Downloading : {self.mangaTitle} Chapter {self.chapter}")
 
         for i,page in enumerate(self.pages) : 
             imageUrl = f"{self.baseUrl}/data/{self.hash}/{page}"

@@ -1,34 +1,58 @@
-import os, re
-from requests import Session
+import os, re, shutil, zipfile
+from time import sleep
+from requests import get
 from typing import List
-from utils import writeFolderToCBZ, statusBar
 
-specialCharacters = {'?' : '', '"' : '', '*' : '', '/' : '', '#' : '', '\\': '', ':' : '', '_' : ' ', '|' : '', '<' : '', '>' : ''}
+specialCharacters = {
+    '\\': '',
+    '/': '',
+    ':': '',
+    '*': '',
+    '?': '',
+    '"': '',
+    '<': '',
+    '>': '',
+    '|': ''
+}
+
+def writeFolderToCBZ(directory):
+    images = os.listdir(directory)
+    with zipfile.ZipFile(directory + '.cbz', 'w') as targetfile :
+        for image in images :
+            targetfile.write(directory + '/' + image, image)
+    shutil.rmtree(directory)
+
+def statusBar(total, current):
+    end = ''
+    if total == current : end = '\n'
+    width = 50
+    x = int((current / total)  * width)
+    printedString = "".join([('█' if i < x else ' ') for i in range(width)])
+    out = f"status : [{printedString}] {current}/{total}\r"
+    print(f"{out}\r",end=end)
 
 class MangadexTitle:
     def __init__(self, link : str):
         self.link = link
-        self.session = Session()
         self.id = self.getId()
         self.title = self.getTitle()
         self.chapters = self.getChapters()
 
     def getId(self) -> str:
         return re.search(r"/title/(.+?)/", self.link).group(1)
-    
+
     def getTitle(self) -> str:
         infosApiLink = self.apiLink = "https://api.mangadex.org/manga/{id}"
-        data = self.session.get(infosApiLink.format(id=self.id)).json()["data"]["attributes"]["title"]
+        data = get(infosApiLink.format(id=self.id), headers={"User-Agent" : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"}).json()["data"]["attributes"]["title"]
         try :
             title = data["en"]
         except : 
             title = data[list(data)[-1]]
         return title.translate(str.maketrans(specialCharacters))
-        
 
     def getChapters(self) -> List:
-        chaptersApiLink = "https://api.mangadex.org/manga/{id}/feed?limit=500&translatedLanguage[]=en"
-        res = self.session.get(chaptersApiLink.format(id = self.id)).json()
+        chaptersApiLink = f"https://api.mangadex.org/manga/{self.id}/feed?limit=500&translatedLanguage[]=en"
+        res = get(chaptersApiLink).json()
         data = res["data"]
         availableChapters = {}
         for element in data :
@@ -50,18 +74,14 @@ class MangadexTitle:
 
 class MangadexChapter:
     def __init__(self, mangaTitle : str, id : str):
-        self.session = Session()
         self.mangaTitle = mangaTitle
         self.id = id
         self.infos = self.getInfos()
-        self.title = self.getTitle()
         self.chapter = self.getChapter()
-        self.groups = self.getGroups()
-        self.path = self.getPath()
         self.baseUrl, self.hash, self.pages = self.getPages()
-    
+
     def getInfos(self):
-        return self.session.get(f"https://api.mangadex.org/chapter/{self.id}").json()
+        return get(f"https://api.mangadex.org/chapter/{self.id}", headers={"User-Agent" : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"}).json()
     
     def getTitle(self) -> str:
         title = ''
@@ -73,28 +93,32 @@ class MangadexChapter:
 
     def getChapter(self):
         return self.infos["data"]["attributes"]["chapter"]
-    
+
     def getGroups(self):
         groups = []
         for y in self.infos["data"]["relationships"]:
             if y["type"] == "scanlation_group" :
                 groupId = y["id"]
                 groupLink = f"https://api.mangadex.org/group/{groupId}"
-                groupData = self.session.get(groupLink).json()
+                groupData = get(groupLink).json()
                 groups.append(groupData["data"]["attributes"]["name"])
 
         groups = ' & '.join(groups).translate(str.maketrans(specialCharacters))
-        return groups
+
+        return groups or "No Group"
     
     def getPath(self):
-        path = f"Manga/{self.mangaTitle}/{self.mangaTitle} Ch. {self.chapter} - {self.title} (en) [{self.groups}]"
+        title = self.getTitle()
+        groups = self.getGroups()
+
+        path = f"Manga/{self.mangaTitle}/{self.mangaTitle} Ch. {self.chapter} - {title} (en) [{groups}]"
         if len(path)>200:
-            path = path = f"Manga/{self.mangaTitle}/{self.mangaTitle} Ch. {self.chapter} - (en) [{self.groups}]"
+            path = path = f"Manga/{self.mangaTitle}/{self.mangaTitle} Ch. {self.chapter} - (en) [{groups}]"
         return path
     
     def getPages(self):
         pagesLink = f"https://api.mangadex.org/at-home/server/{self.id}"
-        pagesData = self.session.get(pagesLink).json()
+        pagesData = get(pagesLink).json()
 
         baseUrl = pagesData["baseUrl"]
         pages = pagesData["chapter"]["data"]
@@ -103,8 +127,10 @@ class MangadexChapter:
         return baseUrl, hash, pages
     
     def download(self):
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
+        path = self.getPath()
+
+        if not os.path.exists(path):
+            os.makedirs(path)
 
         print(f"downloading : {self.mangaTitle} Chapter {self.chapter}")
 
@@ -112,15 +138,15 @@ class MangadexChapter:
             imageUrl = f"{self.baseUrl}/data/{self.hash}/{page}"
             ext = page.split('.')[-1]
 
-            with open(f"{self.path}/page {str(i).zfill(3)}.{ext}", 'wb+') as img :                
-                dt = self.session.get(imageUrl)
+            with open(f"{path}/page {str(i).zfill(3)}.{ext}", 'wb+') as img :                
+                dt = get(imageUrl)
                 img.write(dt.content)
             statusBar(len(self.pages),i+1)
 
-        writeFolderToCBZ(self.path)
+        writeFolderToCBZ(path)
 
 def main():
-    Manga = MangadexTitle(input("Paste series link here : "))
+    Manga = MangadexTitle(input("Paste series link here : ") + '/')
 
     print(f"Manga : {Manga.title}")
     print(f"Available Chapters :\n{sorted(Manga.chapters)}")
@@ -143,10 +169,12 @@ def main():
                 for chapter in Manga.chapters:
                     if float(lowerBound) <= chapter and chapter <= float(upperBound) :
                         chaptersToBeDownloaded[chapter] = Manga.chapters[chapter]
-
             else :
-                if float(requested) in Manga.chapters:
-                    chapter = int(requested) if int(requested) == float(requested) else float(requested)
+                chapter = float(requested)
+                if chapter in Manga.chapters:
+                    if int(chapter) == chapter:
+                        chapter = int(chapter)
+
                     chaptersToBeDownloaded[chapter] = Manga.chapters[chapter]
     
     for requested in sorted(chaptersToBeDownloaded):

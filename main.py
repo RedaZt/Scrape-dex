@@ -28,7 +28,7 @@ def statusBar(total, current):
     width = 50
     x = int((current / total)  * width)
     printedString = "".join([('█' if i < x else ' ') for i in range(width)])
-    out = f"status : [{printedString}] {current}/{total}\r"
+    out = f"Status : [{printedString}] {current}/{total}\r"
     print(f"{out}\r",end=end)
 
 class MangadexTitle:

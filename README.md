@@ -19,7 +19,7 @@ Available Chapters :
 Chapters you want to download : 1-5,8,20-26
 
 Downloading : Hirayasumi Chapter 1
-status : [██████████████████████████████████████████████████] 42/42
+Status : [██████████████████████████████████████████████████] 42/42
 
 ... (and so on)
 ```

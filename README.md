@@ -4,7 +4,7 @@ Search and download based script, written using MangaDex API v5.
 
 ## Requirements
   * [Python 3.4+](https://www.python.org/downloads/)
-  * requests
+  * [Requests](https://pypi.org/project/requests/)
 
 ## Usage
   * Download the source code.

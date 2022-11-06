@@ -1,4 +1,4 @@
-# Scrap-dex
+# Scrape-dex
 Python script to download manga from [MangaDex](https://mangadex.org/), written using MangaDex API v5.
 
 ## Requirements

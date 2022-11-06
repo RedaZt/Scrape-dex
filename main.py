@@ -19,7 +19,7 @@ def writeFolderToCBZ(directory):
     images = os.listdir(directory)
     with zipfile.ZipFile(directory + '.cbz', 'w') as targetfile :
         for image in images :
-            targetfile.write(directory + '/' + image, image)
+            targetfile.write(f"{directory}/{image}", image)
     shutil.rmtree(directory)
 
 def statusBar(total, current):
@@ -119,7 +119,7 @@ class MangadexChapter:
     def getPages(self):
         pagesLink = f"https://api.mangadex.org/at-home/server/{self.id}"
         pagesData = get(pagesLink).json()
-
+        
         baseUrl = pagesData["baseUrl"]
         pages = pagesData["chapter"]["data"]
         hash = pagesData["chapter"]["hash"]
